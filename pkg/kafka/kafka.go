@@ -41,6 +41,7 @@ func New(opts ...Option) *Kafka {
 		connAttempts: _defaultMaxAttempts,
 	}
 
+	// Custom options
 	for _, opt := range opts {
 		opt(k)
 	}

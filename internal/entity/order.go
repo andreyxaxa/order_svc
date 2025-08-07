@@ -2,6 +2,8 @@ package entity
 
 import "time"
 
+// TODO: ??? инкапсулировать Delivery, Payment, Item
+
 type Order struct {
 	OrderUID          string    `json:"order_uid" example:"b563feb7b2b84b6test"`
 	TrackNumber       string    `json:"track_number" example:"WBILMTESTTRACK"`
