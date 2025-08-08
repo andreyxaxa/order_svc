@@ -8,6 +8,9 @@ import (
 
 type (
 	Config struct {
+		HTTP HTTP
+		Log  Log
+		PG   PG
 	}
 
 	HTTP struct {
@@ -22,6 +25,8 @@ type (
 		PoolMax int    `env:"PG_POOL_MAX,required"`
 		URL     string `env:"PG_URL,required"`
 	}
+
+	// TODO: Kafka
 )
 
 func NewConfig() (*Config, error) {
