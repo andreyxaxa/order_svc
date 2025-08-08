@@ -7,6 +7,8 @@ require (
 	github.com/jackc/pgx/v5 v5.7.5
 )
 
+require github.com/caarlos0/env/v11 v11.3.1 // indirect
+
 require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/gofiber/fiber/v2 v2.52.9 // indirect
