@@ -8,9 +8,10 @@ import (
 
 type (
 	Config struct {
-		HTTP HTTP
-		Log  Log
-		PG   PG
+		HTTP  HTTP
+		Log   Log
+		PG    PG
+		Kafka Kafka
 	}
 
 	HTTP struct {
@@ -26,7 +27,9 @@ type (
 		URL     string `env:"PG_URL,required"`
 	}
 
-	// TODO: Kafka
+	Kafka struct {
+		Topic string `env:"KAFKA_TOPIC,required"`
+	}
 )
 
 func NewConfig() (*Config, error) {
