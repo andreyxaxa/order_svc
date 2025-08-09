@@ -7,7 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func NewRouter(app *fiber.App, config, o usecase.Orders, l logger.Interface) {
+func NewRouter(app *fiber.App, o usecase.Orders, l logger.Interface) {
 	apiV1Group := app.Group("/v1")
 	{
 		v1.NewOrderRoutes(apiV1Group, o, l)
