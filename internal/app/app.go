@@ -32,6 +32,11 @@ func Run(cfg *config.Config) {
 	defer pg.Close()
 	repo := persistent.New(pg)
 	cachedRepo := cache.New(repo, cfg.Cache.Capacity, cfg.Cache.TTL)
+	// Cache Preload
+	err = cachedRepo.PreloadCache(context.Background(), cfg.Cache.PreloadLimit)
+	if err != nil {
+		l.Fatal(fmt.Errorf("app - Run - cachedRepo.PreloadCache: %w", err))
+	}
 
 	// Use-Case
 	ordersUseCase := orders.New(cachedRepo)

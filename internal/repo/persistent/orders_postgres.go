@@ -8,6 +8,7 @@ import (
 	"github.com/Masterminds/squirrel"
 	"github.com/andreyxaxa/order_svc/internal/entity"
 	"github.com/andreyxaxa/order_svc/pkg/postgres"
+	"github.com/jackc/pgx/v5"
 )
 
 const (
@@ -147,6 +148,7 @@ func (r *OrdersRepo) Store(ctx context.Context, o entity.Order) error {
 		}
 	}
 
+	// Commit Transaction
 	if err := tx.Commit(ctx); err != nil {
 		return fmt.Errorf("OrdersRepo - Store - tx.Commit: %w", err)
 	}
@@ -277,4 +279,169 @@ func (r *OrdersRepo) GetOrder(ctx context.Context, orderUID string) (entity.Orde
 	}
 
 	return o, nil
+}
+
+func (r *OrdersRepo) ListRecentOrders(ctx context.Context, limit int) ([]entity.Order, error) {
+	// isolation level
+	tx, err := r.Pool.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.RepeatableRead})
+	if err != nil {
+		return nil, fmt.Errorf("OrdersRepo - ListRecentOrders - r.Pool.BeginTx: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	// 1. last 'orders'
+	sql, args, err := r.Builder.
+		Select(
+			"order_uid, track_number, entry, locale, internal_signature, customer_id",
+			"delivery_service, shardkey, sm_id, date_created, oof_shard").
+		From(ordersTable).
+		OrderBy("date_created DESC").
+		Limit(uint64(limit)).
+		ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("OrdersRepo - ListRecentOrders - r.Builder: %w", err)
+	}
+
+	rows, err := tx.Query(ctx, sql, args...)
+	if err != nil {
+		return nil, fmt.Errorf("OrdersRepo - ListRecentOrders - tx.Query: %w", err)
+	}
+	defer rows.Close()
+
+	// all orders
+	orders := make([]entity.Order, 0, limit)
+	var orderUIDs []string
+	for rows.Next() {
+		var o entity.Order
+		if err := rows.Scan(
+			&o.OrderUID, &o.TrackNumber, &o.Entry, &o.Locale,
+			&o.InternalSignature, &o.CustomerID, &o.DeliveryService, &o.ShardKey,
+			&o.SmID, &o.DateCreated, &o.OofShard,
+		); err != nil {
+			return nil, fmt.Errorf("OrdersRepo - ListRecentOrders - rows.Next: %w", err)
+		}
+		orders = append(orders, o)
+		orderUIDs = append(orderUIDs, o.OrderUID)
+	}
+
+	if len(orders) == 0 {
+		return orders, nil
+	}
+
+	// 2. last 'delivery'
+	sql, args, err = r.Builder.
+		Select("order_uid, name, phone, zip, city, address, region, email").
+		From(deliveriesTable).
+		Where(squirrel.Eq{"order_uid": orderUIDs}).
+		ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("OrdersRepo - ListRecentOrders - r.Builder: %w", err)
+	}
+
+	rows, err = tx.Query(ctx, sql, args...)
+	if err != nil {
+		return nil, fmt.Errorf("OrdersRepo - ListRecentOrders - tx.Query: %w", err)
+	}
+	defer rows.Close()
+
+	// all deliveries
+	deliveries := map[string]entity.Delivery{}
+	for rows.Next() {
+		var d entity.Delivery
+		var orderUID string
+		if err := rows.Scan(
+			&orderUID, &d.Name, &d.Phone, &d.Zip,
+			&d.City, &d.Address, &d.Region, &d.Email,
+		); err != nil {
+			return nil, fmt.Errorf("OrdersRepo - ListRecentOrders - rows.Next: %w", err)
+		}
+		deliveries[orderUID] = d
+	}
+
+	// 3. last 'payments'
+	sql, args, err = r.Builder.
+		Select(
+			"transaction, order_uid, request_id, currency, provider, amount",
+			"payment_dt, bank, delivery_cost, goods_total, custom_fee").
+		From(paymentsTable).
+		Where(squirrel.Eq{"order_uid": orderUIDs}).
+		ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("OrdersRepo - ListRecentOrders - r.Builder: %w", err)
+	}
+
+	rows, err = tx.Query(ctx, sql, args...)
+	if err != nil {
+		return nil, fmt.Errorf("OrdersRepo - ListRecentOrders - tx.Query: %w", err)
+	}
+	defer rows.Close()
+
+	// all payments
+	payments := map[string]entity.Payment{}
+	for rows.Next() {
+		var p entity.Payment
+		var orderUID string
+		if err := rows.Scan(
+			&p.Transaction, &orderUID, &p.RequestID, &p.Currency,
+			&p.Provider, &p.Amount, &p.PaymentDT, &p.Bank,
+			&p.DeliveryCost, &p.GoodsTotal, &p.CustomFee,
+		); err != nil {
+			return nil, fmt.Errorf("OrdersRepo - ListRecentOrders - rows.Next: %w", err)
+		}
+		payments[orderUID] = p
+	}
+
+	// 4. last 'items'
+	sql, args, err = r.Builder.
+		Select(
+			"chrt_id, track_number, price, rid, name",
+			"sale, size, total_price, nm_id, brand, status").
+		From(itemsTable).
+		Where(squirrel.Eq{"order_uid": orderUIDs}).
+		ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("OrdersRepo - ListRecentOrders - r.Builder: %w", err)
+	}
+
+	rows, err = tx.Query(ctx, sql, args...)
+	if err != nil {
+		return nil, fmt.Errorf("OrdersRepo - ListRecentOrders - tx.Query: %w", err)
+	}
+	defer rows.Close()
+
+	// all items
+	items := make(map[string][]entity.Item, len(orderUIDs))
+	for rows.Next() {
+		var i entity.Item
+		var orderUID string
+		if err := rows.Scan(
+			&i.ChrtID, &i.TrackNumber, &i.Price,
+			&i.RID, &i.Name, &i.Sale, &i.Size,
+			&i.TotalPrice, &i.NmID, &i.Brand, &i.Status,
+		); err != nil {
+			return nil, fmt.Errorf("OrdersRepo - ListRecentOrders - rows.Next: %w", err)
+		}
+		items[orderUID] = append(items[orderUID], i)
+	}
+
+	// 5. all together
+	for idx := range orders {
+		orderUID := orders[idx].OrderUID
+		if d, ok := deliveries[orderUID]; ok {
+			orders[idx].Delivery = d
+		}
+		if p, ok := payments[orderUID]; ok {
+			orders[idx].Payment = p
+		}
+		if i, ok := items[orderUID]; ok {
+			orders[idx].Items = i
+		}
+	}
+
+	// 6. transaction commit
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("OrdersRepo - ListRecentOrders - tx.Commit: %w", err)
+	}
+
+	return orders, nil
 }

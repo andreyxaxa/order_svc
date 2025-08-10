@@ -33,8 +33,9 @@ type (
 	}
 
 	Cache struct {
-		Capacity int `env:"CACHE_CAPACITY,required"`
-		TTL      int `env:"CACHE_TTL,required"`
+		Capacity     int `env:"CACHE_CAPACITY,required"`
+		TTL          int `env:"CACHE_TTL,required"`
+		PreloadLimit int `env:"CACHE_PRELOAD_LIMIT,required"`
 	}
 )
 

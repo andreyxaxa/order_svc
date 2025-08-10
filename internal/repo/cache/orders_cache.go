@@ -46,3 +46,16 @@ func (r *CachedOrdersRepo) Store(ctx context.Context, order entity.Order) error 
 
 	return nil
 }
+
+func (r *CachedOrdersRepo) PreloadCache(ctx context.Context, limit int) error {
+	orders, err := r.db.ListRecentOrders(ctx, limit)
+	if err != nil {
+		return fmt.Errorf("CachedOrdersRepo - PreloadCache - r.db.ListRecentOrders")
+	}
+
+	for _, order := range orders {
+		r.cache.Set(order.OrderUID, order)
+	}
+
+	return nil
+}
