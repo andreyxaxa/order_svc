@@ -11,6 +11,7 @@ import (
 
 	"github.com/andreyxaxa/order_svc/internal/consumer"
 	"github.com/andreyxaxa/order_svc/internal/controller/http"
+	"github.com/andreyxaxa/order_svc/internal/repo/cache"
 	"github.com/andreyxaxa/order_svc/internal/repo/persistent"
 	"github.com/andreyxaxa/order_svc/internal/usecase/orders"
 	"github.com/andreyxaxa/order_svc/pkg/httpserver"
@@ -30,9 +31,10 @@ func Run(cfg *config.Config) {
 	}
 	defer pg.Close()
 	repo := persistent.New(pg)
+	cachedRepo := cache.New(repo, cfg.Cache.Capacity, cfg.Cache.TTL)
 
 	// Use-Case
-	ordersUseCase := orders.New(repo)
+	ordersUseCase := orders.New(cachedRepo)
 
 	// Kafka Consumer
 	ordersConsumer := consumer.New(kafka.New(kafka.Topic(cfg.Kafka.Topic)), repo, l)

@@ -12,6 +12,7 @@ type (
 		Log   Log
 		PG    PG
 		Kafka Kafka
+		Cache Cache
 	}
 
 	HTTP struct {
@@ -29,6 +30,11 @@ type (
 
 	Kafka struct {
 		Topic string `env:"KAFKA_TOPIC,required"`
+	}
+
+	Cache struct {
+		Capacity int `env:"CACHE_CAPACITY,required"`
+		TTL      int `env:"CACHE_TTL,required"`
 	}
 )
 

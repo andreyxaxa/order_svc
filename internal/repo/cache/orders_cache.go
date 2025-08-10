@@ -1,0 +1,48 @@
+package cache
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/andreyxaxa/order_svc/internal/entity"
+	"github.com/andreyxaxa/order_svc/internal/repo/cache/lru"
+	"github.com/andreyxaxa/order_svc/internal/repo/persistent"
+)
+
+type CachedOrdersRepo struct {
+	db    *persistent.OrdersRepo
+	cache *lru.LRUCache
+}
+
+func New(dbRepo *persistent.OrdersRepo, capacity int, ttlMinutes int) *CachedOrdersRepo {
+	return &CachedOrdersRepo{
+		db:    dbRepo,
+		cache: lru.New(capacity, time.Minute*time.Duration(ttlMinutes)),
+	}
+}
+
+func (r *CachedOrdersRepo) GetOrder(ctx context.Context, orderUID string) (entity.Order, error) {
+	if order, ok := r.cache.Get(orderUID); ok {
+		return order, nil
+	}
+
+	order, err := r.db.GetOrder(ctx, orderUID)
+	if err != nil {
+		return entity.Order{}, fmt.Errorf("CachedOrdersRepo - GetOrder - r.db.GetOrder: %w", err)
+	}
+
+	r.cache.Set(orderUID, order)
+
+	return order, nil
+}
+
+func (r *CachedOrdersRepo) Store(ctx context.Context, order entity.Order) error {
+	if err := r.db.Store(ctx, order); err != nil {
+		return fmt.Errorf("CachedOrderRepo - Store - r.db.Store: %w", err)
+	}
+
+	r.cache.Set(order.OrderUID, order)
+
+	return nil
+}
