@@ -15,7 +15,7 @@ const (
 	_defaultMinBytes      = 10e3
 	_defaultMaxBytes      = 10e6
 	_defaultMaxAttempts   = 10
-	_defaultReadTimeout   = 30 * time.Second
+	_defaultReadTimeout   = 2 * time.Minute
 )
 
 type Kafka struct {
