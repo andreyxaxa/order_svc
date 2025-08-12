@@ -1,0 +1,16 @@
+!<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Order {{ .Order.OrderUID }}</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        pre { background: #f1eded; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Order Info</h1>
+    <pre>{{ .PrettyJSON }}</pre>
+    <a href="/v1/order/info"></a>
+</body>
+</html>
