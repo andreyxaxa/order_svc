@@ -8,11 +8,12 @@ import (
 
 type (
 	Config struct {
-		HTTP  HTTP
-		Log   Log
-		PG    PG
-		Kafka Kafka
-		Cache Cache
+		HTTP    HTTP
+		Log     Log
+		PG      PG
+		Kafka   Kafka
+		Cache   Cache
+		Swagger Swagger
 	}
 
 	HTTP struct {
@@ -36,6 +37,10 @@ type (
 		Capacity     int `env:"CACHE_CAPACITY,required"`
 		TTL          int `env:"CACHE_TTL,required"`
 		PreloadLimit int `env:"CACHE_PRELOAD_LIMIT,required"`
+	}
+
+	Swagger struct {
+		Enabled bool `env:"SWAGGER_ENABLED" envDefault:"false"`
 	}
 )
 

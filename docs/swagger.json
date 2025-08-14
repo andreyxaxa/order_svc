@@ -1,0 +1,296 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/v1/order/info": {
+            "get": {
+                "description": "Returns order details as JSON",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Get order info by UID (JSON)",
+                "operationId": "orderJSON",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Order UID",
+                        "name": "order_uid",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.Order"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/order/info/html": {
+            "get": {
+                "description": "Returns order details as HTML page",
+                "produces": [
+                    "text/html"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Get order info by UID (HTML)",
+                "operationId": "orderHTML",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Order UID",
+                        "name": "order_uid",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "HTML page with order info or search form",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "entity.Delivery": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "example": "Ploshad Mira 15"
+                },
+                "city": {
+                    "type": "string",
+                    "example": "Kiryat Mozkin"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "test@gmail.com"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Test Testov"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+9720000000"
+                },
+                "region": {
+                    "type": "string",
+                    "example": "Kraiot"
+                },
+                "zip": {
+                    "type": "string",
+                    "example": "2639809"
+                }
+            }
+        },
+        "entity.Item": {
+            "type": "object",
+            "properties": {
+                "brand": {
+                    "type": "string",
+                    "example": "Vivienne Sabo"
+                },
+                "chrt_id": {
+                    "type": "integer",
+                    "example": 9934930
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Mascaras"
+                },
+                "nm_id": {
+                    "type": "integer",
+                    "example": 2389212
+                },
+                "price": {
+                    "type": "integer",
+                    "example": 453
+                },
+                "rid": {
+                    "type": "string",
+                    "example": "ab4219087a764ae0btest"
+                },
+                "sale": {
+                    "type": "integer",
+                    "example": 30
+                },
+                "size": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "status": {
+                    "type": "integer",
+                    "example": 202
+                },
+                "total_price": {
+                    "type": "integer",
+                    "example": 317
+                },
+                "track_number": {
+                    "type": "string",
+                    "example": "WBILMTESTTRACK"
+                }
+            }
+        },
+        "entity.Order": {
+            "type": "object",
+            "properties": {
+                "customer_id": {
+                    "type": "string",
+                    "example": "test"
+                },
+                "date_created": {
+                    "type": "string",
+                    "example": "2021-11-26T06:22:19Z"
+                },
+                "delivery": {
+                    "$ref": "#/definitions/entity.Delivery"
+                },
+                "delivery_service": {
+                    "type": "string",
+                    "example": "meest"
+                },
+                "entry": {
+                    "type": "string",
+                    "example": "WBIL"
+                },
+                "internal_signature": {
+                    "type": "string",
+                    "example": ""
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.Item"
+                    }
+                },
+                "locale": {
+                    "type": "string",
+                    "example": "en"
+                },
+                "oof_shard": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "order_uid": {
+                    "type": "string",
+                    "example": "b563feb7b2b84b6test"
+                },
+                "payment": {
+                    "$ref": "#/definitions/entity.Payment"
+                },
+                "shardkey": {
+                    "type": "string",
+                    "example": "9"
+                },
+                "sm_id": {
+                    "type": "integer",
+                    "example": 99
+                },
+                "track_number": {
+                    "type": "string",
+                    "example": "WBILMTESTTRACK"
+                }
+            }
+        },
+        "entity.Payment": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer",
+                    "example": 1817
+                },
+                "bank": {
+                    "type": "string",
+                    "example": "alpha"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "custom_fee": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "delivery_cost": {
+                    "type": "integer",
+                    "example": 1500
+                },
+                "goods_total": {
+                    "type": "integer",
+                    "example": 317
+                },
+                "payment_dt": {
+                    "type": "integer",
+                    "example": 1637907727
+                },
+                "provider": {
+                    "type": "string",
+                    "example": "wbpay"
+                },
+                "request_id": {
+                    "type": "string",
+                    "example": ""
+                },
+                "transaction": {
+                    "type": "string",
+                    "example": "b563feb7b2b84b6test"
+                }
+            }
+        },
+        "response.Error": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "message"
+                }
+            }
+        }
+    }
+}

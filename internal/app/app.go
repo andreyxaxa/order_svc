@@ -46,7 +46,7 @@ func Run(cfg *config.Config) {
 
 	// HTTP Server
 	httpServer := httpserver.New(httpserver.Port(cfg.HTTP.Port))
-	http.NewRouter(httpServer.App, ordersUseCase, l)
+	http.NewRouter(httpServer.App, cfg, ordersUseCase, l)
 
 	// Consumer Start
 	ctx, cancel := context.WithCancel(context.Background())

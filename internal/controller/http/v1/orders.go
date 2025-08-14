@@ -11,6 +11,17 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// @Summary Get order info by UID (JSON)
+// @Description Returns order details as JSON
+// @ID orderJSON
+// @Tags	orders
+// @Produce json
+// @Param order_uid query string true "Order UID"
+// @Success 200 {object} entity.Order
+// @Failure 400 {object} response.Error
+// @Failure 404 {object} response.Error
+// @Failure 500 {object} response.Error
+// @Router /v1/order/info [get]
 func (r *V1) orderJSON(ctx *fiber.Ctx) error {
 	orderUID := ctx.Query("order_uid")
 
@@ -31,6 +42,16 @@ func (r *V1) orderJSON(ctx *fiber.Ctx) error {
 	return ctx.Status(http.StatusOK).JSON(order)
 }
 
+// @Summary Get order info by UID (HTML)
+// @Description Returns order details as HTML page
+// @ID orderHTML
+// @Tags orders
+// @Produce html
+// @Param order_uid query string false "Order UID"
+// @Success 200 {string} string "HTML page with order info or search form"
+// @Failure 404 {object} response.Error
+// @Failure 500 {object} response.Error
+// @Router /v1/order/info/html [get]
 func (r *V1) orderHTML(ctx *fiber.Ctx) error {
 	orderUID := ctx.Query("order_uid")
 

@@ -1,0 +1,207 @@
+definitions:
+  entity.Delivery:
+    properties:
+      address:
+        example: Ploshad Mira 15
+        type: string
+      city:
+        example: Kiryat Mozkin
+        type: string
+      email:
+        example: test@gmail.com
+        type: string
+      name:
+        example: Test Testov
+        type: string
+      phone:
+        example: "+9720000000"
+        type: string
+      region:
+        example: Kraiot
+        type: string
+      zip:
+        example: "2639809"
+        type: string
+    type: object
+  entity.Item:
+    properties:
+      brand:
+        example: Vivienne Sabo
+        type: string
+      chrt_id:
+        example: 9934930
+        type: integer
+      name:
+        example: Mascaras
+        type: string
+      nm_id:
+        example: 2389212
+        type: integer
+      price:
+        example: 453
+        type: integer
+      rid:
+        example: ab4219087a764ae0btest
+        type: string
+      sale:
+        example: 30
+        type: integer
+      size:
+        example: "0"
+        type: string
+      status:
+        example: 202
+        type: integer
+      total_price:
+        example: 317
+        type: integer
+      track_number:
+        example: WBILMTESTTRACK
+        type: string
+    type: object
+  entity.Order:
+    properties:
+      customer_id:
+        example: test
+        type: string
+      date_created:
+        example: "2021-11-26T06:22:19Z"
+        type: string
+      delivery:
+        $ref: '#/definitions/entity.Delivery'
+      delivery_service:
+        example: meest
+        type: string
+      entry:
+        example: WBIL
+        type: string
+      internal_signature:
+        example: ""
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/entity.Item'
+        type: array
+      locale:
+        example: en
+        type: string
+      oof_shard:
+        example: "1"
+        type: string
+      order_uid:
+        example: b563feb7b2b84b6test
+        type: string
+      payment:
+        $ref: '#/definitions/entity.Payment'
+      shardkey:
+        example: "9"
+        type: string
+      sm_id:
+        example: 99
+        type: integer
+      track_number:
+        example: WBILMTESTTRACK
+        type: string
+    type: object
+  entity.Payment:
+    properties:
+      amount:
+        example: 1817
+        type: integer
+      bank:
+        example: alpha
+        type: string
+      currency:
+        example: USD
+        type: string
+      custom_fee:
+        example: 0
+        type: integer
+      delivery_cost:
+        example: 1500
+        type: integer
+      goods_total:
+        example: 317
+        type: integer
+      payment_dt:
+        example: 1637907727
+        type: integer
+      provider:
+        example: wbpay
+        type: string
+      request_id:
+        example: ""
+        type: string
+      transaction:
+        example: b563feb7b2b84b6test
+        type: string
+    type: object
+  response.Error:
+    properties:
+      error:
+        example: message
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /v1/order/info:
+    get:
+      description: Returns order details as JSON
+      operationId: orderJSON
+      parameters:
+      - description: Order UID
+        in: query
+        name: order_uid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.Order'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Get order info by UID (JSON)
+      tags:
+      - orders
+  /v1/order/info/html:
+    get:
+      description: Returns order details as HTML page
+      operationId: orderHTML
+      parameters:
+      - description: Order UID
+        in: query
+        name: order_uid
+        type: string
+      produces:
+      - text/html
+      responses:
+        "200":
+          description: HTML page with order info or search form
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Get order info by UID (HTML)
+      tags:
+      - orders
+swagger: "2.0"
