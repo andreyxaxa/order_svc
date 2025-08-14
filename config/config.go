@@ -14,6 +14,7 @@ type (
 		Kafka   Kafka
 		Cache   Cache
 		Swagger Swagger
+		Metrics Metrics
 	}
 
 	HTTP struct {
@@ -41,6 +42,10 @@ type (
 
 	Swagger struct {
 		Enabled bool `env:"SWAGGER_ENABLED" envDefault:"false"`
+	}
+
+	Metrics struct {
+		Enabled bool `env:"METRICS_ENABLED" envDefault:"true"`
 	}
 )
 
