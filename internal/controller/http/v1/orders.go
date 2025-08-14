@@ -2,10 +2,12 @@ package v1
 
 import (
 	"encoding/json"
+	"errors"
 	"html/template"
 	"net/http"
 	"path/filepath"
 
+	errs "github.com/andreyxaxa/order_svc/pkg/errors"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -20,7 +22,10 @@ func (r *V1) orderJSON(ctx *fiber.Ctx) error {
 	if err != nil {
 		r.l.Error(err, "http - v1 - orderJSON")
 
-		return errorResponse(ctx, http.StatusInternalServerError, "storage problenms") // TODO: норм ошибку, проверка на sql.ErrNoRows
+		if errors.Is(err, errs.ErrNoRows) {
+			return errorResponse(ctx, http.StatusNotFound, errs.ErrNoRows.Error())
+		}
+		return errorResponse(ctx, http.StatusInternalServerError, "storage problenms")
 	}
 
 	return ctx.Status(http.StatusOK).JSON(order)
@@ -47,7 +52,10 @@ func (r *V1) orderHTML(ctx *fiber.Ctx) error {
 	if err != nil {
 		r.l.Error(err, "http - v1 - order")
 
-		return errorResponse(ctx, http.StatusInternalServerError, "storage problems") // TODO: норм ошибку, проверка на sql.ErrNoRows
+		if errors.Is(err, errs.ErrNoRows) {
+			return errorResponse(ctx, http.StatusNotFound, errs.ErrNoRows.Error())
+		}
+		return errorResponse(ctx, http.StatusInternalServerError, "storage problems")
 	}
 
 	pretty, _ := json.MarshalIndent(order, "", "  ")

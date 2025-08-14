@@ -2,11 +2,13 @@ package persistent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/andreyxaxa/order_svc/internal/entity"
+	errs "github.com/andreyxaxa/order_svc/pkg/errors"
 	"github.com/andreyxaxa/order_svc/pkg/postgres"
 	"github.com/jackc/pgx/v5"
 )
@@ -186,6 +188,9 @@ func (r *OrdersRepo) GetOrder(ctx context.Context, orderUID string) (entity.Orde
 		&o.OofShard,
 	)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return o, errs.ErrNoRows
+		}
 		return o, fmt.Errorf("OrdersRepo - GetOrder - row.Scan: %w", err)
 	}
 
@@ -210,6 +215,9 @@ func (r *OrdersRepo) GetOrder(ctx context.Context, orderUID string) (entity.Orde
 		&o.Delivery.Email,
 	)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return o, errs.ErrNoRows
+		}
 		return o, fmt.Errorf("OrdersRepo - GetOrder - row.Scan: %w", err)
 	}
 
@@ -239,6 +247,9 @@ func (r *OrdersRepo) GetOrder(ctx context.Context, orderUID string) (entity.Orde
 		&o.Payment.CustomFee,
 	)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return o, errs.ErrNoRows
+		}
 		return o, fmt.Errorf("OrdersRepo - GetOrder - row.Scan: %w", err)
 	}
 
@@ -274,6 +285,9 @@ func (r *OrdersRepo) GetOrder(ctx context.Context, orderUID string) (entity.Orde
 			&item.Brand,
 			&item.Status,
 		); err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return o, errs.ErrNoRows
+			}
 			return o, fmt.Errorf("OrdersRepo - GetOrder - rows.Scan: %w", err)
 		}
 		o.Items = append(o.Items, item)
@@ -326,7 +340,7 @@ func (r *OrdersRepo) ListRecentOrders(ctx context.Context, limit int) ([]entity.
 	}
 
 	if len(orders) == 0 {
-		return orders, nil
+		return orders, errs.ErrNoRows
 	}
 
 	// 2. last 'delivery'

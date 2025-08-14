@@ -2,12 +2,14 @@ package cache
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/andreyxaxa/order_svc/internal/entity"
 	"github.com/andreyxaxa/order_svc/internal/repo/cache/lru"
 	"github.com/andreyxaxa/order_svc/internal/repo/persistent"
+	errs "github.com/andreyxaxa/order_svc/pkg/errors"
 )
 
 type CachedOrdersRepo struct {
@@ -29,6 +31,9 @@ func (r *CachedOrdersRepo) GetOrder(ctx context.Context, orderUID string) (entit
 
 	order, err := r.db.GetOrder(ctx, orderUID)
 	if err != nil {
+		if errors.Is(err, errs.ErrNoRows) {
+			return entity.Order{}, errs.ErrNoRows
+		}
 		return entity.Order{}, fmt.Errorf("CachedOrdersRepo - GetOrder - r.db.GetOrder: %w", err)
 	}
 
