@@ -15,6 +15,7 @@ func NewOrderRoutes(apiV1Group fiber.Router, o usecase.Orders, l logger.Interfac
 	orderGroup := apiV1Group.Group("/order")
 
 	{
-		orderGroup.Get("/info", r.order)
+		orderGroup.Get("/info", r.orderJSON)
+		orderGroup.Get("/info/html", r.orderHTML)
 	}
 }

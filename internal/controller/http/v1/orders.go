@@ -9,7 +9,24 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func (r *V1) order(ctx *fiber.Ctx) error {
+func (r *V1) orderJSON(ctx *fiber.Ctx) error {
+	orderUID := ctx.Query("order_uid")
+
+	if orderUID == "" {
+		return errorResponse(ctx, http.StatusBadRequest, "order_uid required")
+	}
+
+	order, err := r.o.Order(ctx.UserContext(), orderUID)
+	if err != nil {
+		r.l.Error(err, "http - v1 - orderJSON")
+
+		return errorResponse(ctx, http.StatusInternalServerError, "storage problenms") // TODO: норм ошибку, проверка на sql.ErrNoRows
+	}
+
+	return ctx.Status(http.StatusOK).JSON(order)
+}
+
+func (r *V1) orderHTML(ctx *fiber.Ctx) error {
 	orderUID := ctx.Query("order_uid")
 
 	// path to html files
@@ -30,7 +47,7 @@ func (r *V1) order(ctx *fiber.Ctx) error {
 	if err != nil {
 		r.l.Error(err, "http - v1 - order")
 
-		return errorResponse(ctx, http.StatusInternalServerError, "storage problems")
+		return errorResponse(ctx, http.StatusInternalServerError, "storage problems") // TODO: норм ошибку, проверка на sql.ErrNoRows
 	}
 
 	pretty, _ := json.MarshalIndent(order, "", "  ")
