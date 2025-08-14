@@ -258,6 +258,7 @@ func (r *OrdersRepo) GetOrder(ctx context.Context, orderUID string) (entity.Orde
 	}
 	defer rows.Close()
 
+	o.Items = []entity.Item{}
 	for rows.Next() {
 		var item entity.Item
 		if err := rows.Scan(
@@ -394,7 +395,7 @@ func (r *OrdersRepo) ListRecentOrders(ctx context.Context, limit int) ([]entity.
 	// 4. last 'items'
 	sql, args, err = r.Builder.
 		Select(
-			"chrt_id, track_number, price, rid, name",
+			"order_uid, chrt_id, track_number, price, rid, name",
 			"sale, size, total_price, nm_id, brand, status").
 		From(itemsTable).
 		Where(squirrel.Eq{"order_uid": orderUIDs}).
@@ -415,7 +416,7 @@ func (r *OrdersRepo) ListRecentOrders(ctx context.Context, limit int) ([]entity.
 		var i entity.Item
 		var orderUID string
 		if err := rows.Scan(
-			&i.ChrtID, &i.TrackNumber, &i.Price,
+			&orderUID, &i.ChrtID, &i.TrackNumber, &i.Price,
 			&i.RID, &i.Name, &i.Sale, &i.Size,
 			&i.TotalPrice, &i.NmID, &i.Brand, &i.Status,
 		); err != nil {
@@ -435,6 +436,8 @@ func (r *OrdersRepo) ListRecentOrders(ctx context.Context, limit int) ([]entity.
 		}
 		if i, ok := items[orderUID]; ok {
 			orders[idx].Items = i
+		} else {
+			orders[idx].Items = []entity.Item{}
 		}
 	}
 
