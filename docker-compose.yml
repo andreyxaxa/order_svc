@@ -1,0 +1,127 @@
+services:
+  controller:
+    image: apache/kafka:3.8.1
+    ports:
+      - "9093:9093"
+    networks:
+      - kafka
+    environment:
+      KAFKA_PROCESS_ROLES: controller
+      KAFKA_NODE_ID: 1
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@controller:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENERS: CONTROLLER://:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT
+      KAFKA_LOG_DIRS: /tmp/ctrl
+      KAFKA_LOG_RETENTION_HOURS: 168
+
+  broker:
+    image: apache/kafka:3.8.1
+    hostname: broker
+    ports:
+    - "9092:9092"
+    networks:
+    - kafka
+    environment:
+      KAFKA_PROCESS_ROLES: broker
+      KAFKA_NODE_ID: 2
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@controller:9093
+      KAFKA_LISTENERS: PLAINTEXT://:19092,PLAINTEXT_HOST://:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:19092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LOG_DIRS: /tmp/broker
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    depends_on:
+      - controller
+    
+  create-topic:
+    image: apache/kafka:3.8.1
+    depends_on:
+      - broker
+    networks:
+      - kafka
+    entrypoint: >
+      bash -c "/opt/kafka/bin/kafka-topics.sh
+      --bootstrap-server broker:19092
+      --create
+      --if-not-exists
+      --topic orders
+      --partitions 3
+      --replication-factor 1"
+    
+  producer:
+    image: apache/kafka:3.8.1
+    depends_on:
+      - broker
+    networks:
+      - kafka
+    entrypoint: >
+      bash -c "
+      while ! nc -z broker 9092; do sleep 1; done;
+      cat /order.json | 
+      /opt/kafka/bin/kafka-console-producer.sh
+      --broker-list broker:19092
+      --topic orders"
+    volumes:
+      - ./order.json:/order.json
+
+  db:
+    container_name: db
+    image: postgres:17-alpine
+    networks:
+      - kafka
+    environment:
+      POSTGRES_SSL_MODE: "disable"
+      POSTGRES_HOST: "db"
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: "wb_tech"
+      POSTGRES_USER: "adm"
+      POSTGRES_PASSWORD: "123321"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U adm -d wb_tech"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  migrate:
+    container_name: migrates
+    image: migrate/migrate
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/migrations
+    entrypoint: [
+      "migrate", 
+      "-path", "/migrations",
+      "-database", "postgres://adm:123321@db:5432/wb_tech?sslmode=disable",
+      "up"
+    ]
+
+  app:
+    build: .
+    depends_on:
+      - db
+      - migrate
+      - controller
+      - broker
+    networks:
+      - kafka
+    ports:
+      - "8080:8080"
+
+volumes:
+  db_data:
+
+networks:
+  kafka:
+    name: kafka

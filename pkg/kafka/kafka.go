@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	_defaultBrokerAddress = "localhost:9092"
+	_defaultBrokerAddress = "broker:19092"
 	_defaultTopic         = "orders"
 	_defaultGroupID       = "order-consumer"
 	_defaultMinBytes      = 10e3
