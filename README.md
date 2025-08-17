@@ -47,6 +47,7 @@ make test
 ```
 make bench-test
 ```
+<img width="1036" height="165" alt="image" src="https://github.com/user-attachments/assets/ac2dc9da-d7f3-48d0-975f-0844bbd50bb7" />
 
 ## Прочие `make` команды
 Зависимости:
