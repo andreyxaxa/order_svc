@@ -55,7 +55,10 @@ func (r *CachedOrdersRepo) Store(ctx context.Context, order entity.Order) error 
 func (r *CachedOrdersRepo) PreloadCache(ctx context.Context, limit int) error {
 	orders, err := r.db.ListRecentOrders(ctx, limit)
 	if err != nil {
-		return fmt.Errorf("CachedOrdersRepo - PreloadCache - r.db.ListRecentOrders")
+		if errors.Is(err, errs.ErrNoRows) {
+			return nil
+		}
+		return fmt.Errorf("CachedOrdersRepo - PreloadCache - r.db.ListRecentOrders: %w", err)
 	}
 
 	for _, order := range orders {
